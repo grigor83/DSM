@@ -1,5 +1,3 @@
-package projekat;
-
 import java.io.Serializable;
 
 public class Korisnik implements Serializable {

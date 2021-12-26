@@ -1,5 +1,3 @@
-package projekat;
-
 import java.awt.BorderLayout;
 
 

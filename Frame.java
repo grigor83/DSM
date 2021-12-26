@@ -1,5 +1,3 @@
-package projekat;
-
 import javax.swing.*;
 
 
