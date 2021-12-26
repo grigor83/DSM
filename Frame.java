@@ -1,10 +1,38 @@
+package projekat;
+
 import javax.swing.*;
+
+
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.awt.*;
 
+class  AppendableOOS extends ObjectOutputStream
+{    
+    public AppendableOOS(OutputStream out) throws IOException {
+        // TODO Auto-generated constructor stub
+        super(out);
+    }
+     
+    @Override
+    protected void writeStreamHeader() throws IOException {
+        //super.writeStreamHeader();
+        //reset();
+    }  
+}
+
+
+
 public class Frame extends JFrame{
+	String path;
 	JPanel p;
 	JTextField polje;
 	JButton registruj, uloguj;
@@ -25,26 +53,68 @@ public class Frame extends JFrame{
 		});
 		uloguj.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				unesiPodatke();
+				unesiPodatke(false);
 			}
 		});
 	}
 	
 	private void posaljiZahtjev()
 	{
-		unesiPodatke();
+		unesiPodatke(true);
 		JOptionPane.showMessageDialog(this, "Vaš zahtjev je poslat administratoru!"); 
 	}
 	
-	private void unesiPodatke()
+	private void unesiPodatke(Boolean snimi)
 	{
+		String imePrezime=JOptionPane.showInputDialog(this, "Unesite vaše ime i prezime:");
 		String korisnickoIme = JOptionPane.showInputDialog(this, "Unesite korisničko ime:");
-        if(korisnickoIme.isEmpty())
-        	System.out.println("Accept a client!");
 		String lozinka = JOptionPane.showInputDialog(this, "Unesite lozinku:");
+		if(snimi)
+			snimiZahtjevKaoObjekat(imePrezime, korisnickoIme, lozinka);
 	}
 	
-	public static void main(String[] args) {
-		Frame okvir=new Frame();
+	private void snimiZahtjev(String s, String korisnickoIme, String lozinka)
+	{
+		File zahtjevi=new File(path+"\\korisnickiZahtjevi.txt");
+		try {
+			if (!zahtjevi.exists())
+				zahtjevi.createNewFile();
+			PrintWriter izlaz = new PrintWriter (new FileWriter (zahtjevi,true));
+            izlaz.println(s+" "+korisnickoIme+" "+lozinka);
+            izlaz.close();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		} 
+	}
+	
+	private void snimiZahtjevKaoObjekat(String s, String korisnickoIme, String lozinka)
+	{
+		Korisnik k=new Korisnik (s,korisnickoIme,lozinka);
+		File zahtjevi=new File(path+"\\objekti.txt");
+		FileOutputStream fajl=null;
+		ObjectOutputStream izlaz=null;
+		Boolean isNewFile=false;
+		
+		try {
+			if (!zahtjevi.exists()) {
+				zahtjevi.createNewFile();
+				isNewFile=true;
+			}
+			fajl = new FileOutputStream(zahtjevi,true);
+			
+			if(isNewFile)
+	            izlaz = new ObjectOutputStream(fajl);
+			else
+				izlaz=new AppendableOOS(fajl);
+			
+	        izlaz.writeObject(k);
+	        izlaz.close();	
+		}
+		catch(IOException e){
+			e.printStackTrace();
+		}
 	}
 }
+
+
