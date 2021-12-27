@@ -1,6 +1,4 @@
 import java.awt.BorderLayout;
-
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagLayout;
@@ -35,15 +33,18 @@ public class Administrator extends JFrame {
 		cons.fill = GridBagConstraints.HORIZONTAL;
 		cons.weightx = 1;
 		cons.gridx = 0;	
-		ucitajObjekte();	
-		while(!lista.isEmpty()) {
-			p.add(lista.remove(),cons);
-		}
+		if (!ucitajZahtjeve(p))
+			p.add(new JButton("Nema zahtjeva za registraciju!"));
+		//Ucitaj zahtjeve u listu i ne brisi listu. Kad admin odluci sta da uradi sa nekim zahtjevom treba taj zahtjev obrisati iz fajla
+		//Ili potrazi tog korisnika iz mogdugmeta u fajlu i obrisi ga
+		else 
+			while(!lista.isEmpty()) {
+				p.add(lista.remove(),cons);
+			}
 		skrol=new JScrollPane(p);
-		
 		polje=new JTextField("Primili ste sljedeće zahtjeve za registraciju:"); polje.setHorizontalAlignment(JTextField. CENTER); 
 		polje.setBackground(new Color(0,255,51)); polje.setFont(new Font("Italic", Font.ITALIC+Font.BOLD, 30)); polje.setEditable(false);
-		pregled=new JButton("Pregled naloga");   brisanje=new JButton("Brisanje naloga");
+		pregled=new MojeDugme(p,null,"Pregled naloga");   brisanje=new MojeDugme(p,null,"Brisanje naloga");
 		setTitle("ADMINISTRATOR"); setSize(800,400); setDefaultCloseOperation(EXIT_ON_CLOSE); 
 		setLocationRelativeTo(null); setLayout(new BorderLayout()); 
 		add(polje,BorderLayout.NORTH); add(skrol,BorderLayout.CENTER); 
@@ -55,32 +56,7 @@ public class Administrator extends JFrame {
 		Administrator admin=new Administrator();
 	}
 	
-	public void ucitajZahtjeve()
-	{
-		Scanner ulaz = null; // ulazni tok 
-		String path;
-		File zahtjevi;
-
-		try {
-			ulaz = new Scanner(new FileReader ("configFile.txt"));			
-			path=ulaz.nextLine()+"\\korisnickiZahtjevi.txt";
-			ulaz.close();
-			zahtjevi=new File(path);
-			if(!zahtjevi.exists())
-				return;
-			
-			ulaz = new Scanner(new FileReader (zahtjevi));	
-			lista=new LinkedList<>();
-			while (ulaz.hasNextLine())
-				lista.add(new JButton(ulaz.nextLine()));
-			ulaz.close();		
-		}
-		catch (IOException e) {
-			System.out.println("takva datoteka ne postoji");		
-		}
-	}
-	
-	public void ucitajObjekte()
+	public Boolean ucitajZahtjeve(JPanel p)
 	{
 		String path;
 		File zahtjevi;
@@ -89,11 +65,11 @@ public class Administrator extends JFrame {
 		
 		try {
 			Scanner ulaz = new Scanner(new FileReader ("configFile.txt"));			
-			path=ulaz.nextLine()+"\\objekti.txt";
+			path=ulaz.nextLine()+"\\korisnickiZahtjevi.txt";
 			ulaz.close();
 			zahtjevi=new File(path);
 			if(!zahtjevi.exists())
-				return;			
+				return false;			
 			
 			lista=new LinkedList<>();
             FileInputStream fin = new FileInputStream(zahtjevi);
@@ -101,19 +77,19 @@ public class Administrator extends JFrame {
             try {
                 while (true) {
                     k = (Korisnik) oIn.readObject();
-                    System.out.println(k);
-                    lista.add(new JButton(k.toString()));
+                    lista.add(new MojeDugme(p,k,k.toString()));
                 }
             } catch (Exception e) {
             }
             fin.close();
             oIn.close();
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             System.err.println("failed to read : " + e);
+            return false;
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             System.err.println("failed to read2 : " + e);
+            return false;
         }
+		return true;
 	}
 }

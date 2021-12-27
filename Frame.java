@@ -1,16 +1,16 @@
 import javax.swing.*;
-
-
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.util.HashSet;
 import java.awt.*;
 
 class  AppendableOOS extends ObjectOutputStream
@@ -59,37 +59,27 @@ public class Frame extends JFrame{
 	private void posaljiZahtjev()
 	{
 		unesiPodatke(true);
-		JOptionPane.showMessageDialog(this, "Vaš zahtjev je poslat administratoru!"); 
 	}
 	
 	private void unesiPodatke(Boolean snimi)
 	{
-		String imePrezime=JOptionPane.showInputDialog(this, "Unesite vaše ime i prezime:");
-		String korisnickoIme = JOptionPane.showInputDialog(this, "Unesite korisničko ime:");
-		String lozinka = JOptionPane.showInputDialog(this, "Unesite lozinku:");
+		String imePrezime,korisnickoIme,lozinka;
+		while(true) {
+			imePrezime=JOptionPane.showInputDialog(this, "Unesite vaše ime i prezime:");
+			korisnickoIme = JOptionPane.showInputDialog(this, "Unesite korisničko ime:");
+			lozinka = JOptionPane.showInputDialog(this, "Unesite lozinku:");
+			if (imePrezime!=null && korisnickoIme!=null && lozinka!=null)
+				break;
+		}
 		if(snimi)
-			snimiZahtjevKaoObjekat(imePrezime, korisnickoIme, lozinka);
+			snimiZahtjev(imePrezime, korisnickoIme, lozinka);
 	}
 	
 	private void snimiZahtjev(String s, String korisnickoIme, String lozinka)
 	{
-		File zahtjevi=new File(path+"\\korisnickiZahtjevi.txt");
-		try {
-			if (!zahtjevi.exists())
-				zahtjevi.createNewFile();
-			PrintWriter izlaz = new PrintWriter (new FileWriter (zahtjevi,true));
-            izlaz.println(s+" "+korisnickoIme+" "+lozinka);
-            izlaz.close();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		} 
-	}
-	
-	private void snimiZahtjevKaoObjekat(String s, String korisnickoIme, String lozinka)
-	{
 		Korisnik k=new Korisnik (s,korisnickoIme,lozinka);
-		File zahtjevi=new File(path+"\\objekti.txt");
+		File zahtjevi=new File(path+"\\korisnickiZahtjevi.txt");
+		HashSet<Korisnik> set = ucitajZahtjeve(zahtjevi);
 		FileOutputStream fajl=null;
 		ObjectOutputStream izlaz=null;
 		Boolean isNewFile=false;
@@ -106,12 +96,53 @@ public class Frame extends JFrame{
 			else
 				izlaz=new AppendableOOS(fajl);
 			
-	        izlaz.writeObject(k);
+			while(true) {
+				if (set.add(k)) {
+					izlaz.writeObject(k);
+					JOptionPane.showMessageDialog(this, "Vaš zahtjev je poslat administratoru!"); 
+					break;
+				}
+				else {
+					JOptionPane.showMessageDialog(this, "Korisnicko ime ja zauzeto! Unesite novo!"); 
+					s=JOptionPane.showInputDialog(this, "Unesite vaše ime i prezime:");
+					korisnickoIme = JOptionPane.showInputDialog(this, "Unesite korisničko ime:");
+					lozinka = JOptionPane.showInputDialog(this, "Unesite lozinku:");
+					k=new Korisnik (s,korisnickoIme,lozinka);
+					if (s==null || korisnickoIme==null || lozinka==null)
+						break;
+				}
+			}
 	        izlaz.close();	
 		}
 		catch(IOException e){
 			e.printStackTrace();
 		}
+	}
+	
+	private HashSet<Korisnik> ucitajZahtjeve(File f)
+	{
+		HashSet<Korisnik> set=new HashSet<>();
+		if (!f.exists())
+			return set;
+		Korisnik k;
+		try {
+			FileInputStream fin = new FileInputStream(f);
+	        ObjectInputStream oIn = new ObjectInputStream(fin);
+	        try {
+	            while (true) {
+	                k = (Korisnik) oIn.readObject();
+	                set.add(k);
+	            }
+	        } catch (Exception e) {
+	        }
+	        fin.close();
+	        oIn.close();
+		} catch (FileNotFoundException e) {
+            System.err.println("failed to read : " + e);
+        } catch (IOException e) {
+            System.err.println("failed to read2 : " + e);
+        }
+		return set;
 	}
 }
 

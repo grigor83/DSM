@@ -12,4 +12,26 @@ public class Korisnik implements Serializable {
         return new StringBuffer("Ime: ").append(this.ime)
                 .append(" Korisnicko: ").append(this.korisnickoIme).append(" Lozinka: ").append(this.lozinka).toString();
     }
+	
+	@Override
+	public int hashCode() {
+		return 1;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Korisnik k=(Korisnik)obj;
+		if (korisnickoIme.compareTo(k.korisnickoIme)==0) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 }
