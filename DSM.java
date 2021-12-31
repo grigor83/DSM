@@ -8,15 +8,17 @@ import java.util.Scanner;
 
 public class DSM {
 	static String path;
+	static int n;
+	
 	public static void main(String[] args) {
 		Frame okvir=new Frame();
 		createDSM();
 		okvir.path=path;
+		okvir.n=n;
 	}
 	
 	public static void createDSM()
 	{
-		int n = 0;
 		Scanner ulaz = null; // ulazni tok 
 		try {
 			ulaz = new Scanner(new FileReader ("configFile.txt"));			

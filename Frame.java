@@ -16,7 +16,6 @@ import java.awt.*;
 class  AppendableOOS extends ObjectOutputStream
 {    
     public AppendableOOS(OutputStream out) throws IOException {
-        // TODO Auto-generated constructor stub
         super(out);
     }
      
@@ -31,6 +30,7 @@ class  AppendableOOS extends ObjectOutputStream
 
 public class Frame extends JFrame{
 	String path;
+	int n;
 	JPanel p;
 	JTextField polje;
 	JButton registruj, uloguj;
@@ -78,7 +78,7 @@ public class Frame extends JFrame{
 	private void snimiZahtjev(String s, String korisnickoIme, String lozinka)
 	{
 		Korisnik k=new Korisnik (s,korisnickoIme,lozinka);
-		File zahtjevi=new File(path+"\\korisnickiZahtjevi.txt");
+		File zahtjevi=new File(path +"\\korisnickiZahtjevi");
 		HashSet<Korisnik> set = ucitajZahtjeve(zahtjevi);
 		FileOutputStream fajl=null;
 		ObjectOutputStream izlaz=null;
@@ -118,7 +118,7 @@ public class Frame extends JFrame{
 			e.printStackTrace();
 		}
 	}
-	
+	//Koristi se set da bi se izbjeglo slanje zahtjeva sa istim korisnickim imenom
 	private HashSet<Korisnik> ucitajZahtjeve(File f)
 	{
 		HashSet<Korisnik> set=new HashSet<>();

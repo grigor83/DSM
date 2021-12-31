@@ -4,11 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Scanner;
+import java.util.LinkedList;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -16,9 +15,10 @@ import javax.swing.JPanel;
 
 public class MojeDugme extends JButton implements ActionListener
 {
+	static LinkedList<Korisnik> lista=null;
 	static String path;
-	static File korisnici=null;
-	static Boolean isNewFile;
+	static File korisnici,zahtjevi;
+	static Boolean isNewFile=false;
 	JPanel p;
 	Korisnik k;
 	
@@ -27,8 +27,10 @@ public class MojeDugme extends JButton implements ActionListener
 		super(s);
 		addActionListener(this);
 		this.p=p; this.k=k;
-		if (korisnici==null)
-			kreirajFajl();
+		if (lista==null)
+			lista=new LinkedList<>();
+		if (k!=null)
+			lista.add(k);
 	}
 	
 	public void actionPerformed(ActionEvent e){
@@ -42,26 +44,23 @@ public class MojeDugme extends JButton implements ActionListener
                 "Click a button",
                 JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
     
-        if(x==0 || x==1) {
+        if(x==0 || x==1 || x==2) {
         	p.remove(this);
             p.revalidate();
             p.repaint();
-        	snimiKorisnika();
+            obrisiZahtjev();
+            if (x!=2)
+            	snimiKorisnika(x);
         }
   	}
 	
 	private void kreirajFajl()
 	{
-		Scanner ulaz = null; // ulazni tok 
 		try {
-			ulaz = new Scanner(new FileReader ("configFile.txt"));			
-			path=ulaz.nextLine();
 			File DSMfolder=new File(path);
 			if (!DSMfolder.exists())
 				DSMfolder.mkdir();
-			korisnici=new File(path+"\\korisnici");
-			if (!korisnici.exists())
-				korisnici.createNewFile();
+			korisnici.createNewFile();
 			isNewFile=true;
 		}
 		catch (FileNotFoundException e) {
@@ -69,24 +68,27 @@ public class MojeDugme extends JButton implements ActionListener
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (ulaz!=null)
-			ulaz.close();
 	}
 	
-	private void snimiKorisnika()
+	private void snimiKorisnika(int izbor)
 	{
+		if (!korisnici.exists())
+			kreirajFajl();
+		
+		if (izbor==1)
+			k.premijum=true;		
 		FileOutputStream fajl=null;
 		ObjectOutputStream izlaz=null;
 		
 		try {			
 			fajl = new FileOutputStream(korisnici,true);
-			
 			if(isNewFile) {
 	            izlaz = new ObjectOutputStream(fajl);
 	            isNewFile=false;
 			}
-			else
+			else {
 				izlaz=new AppendableOOS(fajl);
+			}
 			
 			izlaz.writeObject(k);
 	        izlaz.close();	
@@ -98,8 +100,10 @@ public class MojeDugme extends JButton implements ActionListener
 	
 	private void ucitajKorisnike()
 	{
-		if (korisnici==null)
+		if (!korisnici.exists()) {
+			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
 			return;
+		}
 		
 		try {
 			FileInputStream fin = new FileInputStream(korisnici);
@@ -116,5 +120,24 @@ public class MojeDugme extends JButton implements ActionListener
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
         } 
+	}
+	
+	private void obrisiZahtjev()
+	{
+		//U stvari, ovaj metod brise sve korisnicke zahtjeve iz fajla i onda upisuje azuriranu listu
+        lista.remove(k);
+        FileOutputStream fajl=null;
+		ObjectOutputStream izlaz=null;
+		
+		try {
+			new FileOutputStream(zahtjevi).close();		//prvo brise sadrzaj cijelog fajla i odmah ga zatvara
+			fajl = new FileOutputStream(zahtjevi,true);
+            izlaz = new ObjectOutputStream(fajl);
+            for (Korisnik temp: lista)
+            	izlaz.writeObject(temp);
+            izlaz.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

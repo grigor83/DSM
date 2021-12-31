@@ -35,8 +35,6 @@ public class Administrator extends JFrame {
 		cons.gridx = 0;	
 		if (!ucitajZahtjeve(p))
 			p.add(new JButton("Nema zahtjeva za registraciju!"));
-		//Ucitaj zahtjeve u listu i ne brisi listu. Kad admin odluci sta da uradi sa nekim zahtjevom treba taj zahtjev obrisati iz fajla
-		//Ili potrazi tog korisnika iz mogdugmeta u fajlu i obrisi ga
 		else 
 			while(!lista.isEmpty()) {
 				p.add(lista.remove(),cons);
@@ -65,9 +63,12 @@ public class Administrator extends JFrame {
 		
 		try {
 			Scanner ulaz = new Scanner(new FileReader ("configFile.txt"));			
-			path=ulaz.nextLine()+"\\korisnickiZahtjevi.txt";
+			path=ulaz.nextLine();
 			ulaz.close();
-			zahtjevi=new File(path);
+			zahtjevi=new File(path+"\\korisnickiZahtjevi");
+	        MojeDugme.path=path;
+			MojeDugme.zahtjevi=zahtjevi;
+	        MojeDugme.korisnici=new File(path+"\\korisnici");
 			if(!zahtjevi.exists())
 				return false;			
 			
@@ -90,6 +91,8 @@ public class Administrator extends JFrame {
             System.err.println("failed to read2 : " + e);
             return false;
         }
+        if (lista.size()==0)
+        	return false;
 		return true;
 	}
 }
