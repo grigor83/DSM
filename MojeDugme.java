@@ -1,3 +1,5 @@
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -10,8 +12,12 @@ import java.io.ObjectOutputStream;
 import java.util.LinkedList;
 
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 public class MojeDugme extends JButton implements ActionListener
 {
@@ -105,13 +111,14 @@ public class MojeDugme extends JButton implements ActionListener
 			return;
 		}
 		
+		LinkedList<Korisnik> lista=new LinkedList<>();
 		try {
 			FileInputStream fin = new FileInputStream(korisnici);
 	        ObjectInputStream oIn = new ObjectInputStream(fin);
 	        try {
 	            while (true) {
 	                k = (Korisnik) oIn.readObject();
-	                System.out.println(k);
+	                lista.add(k);
 	            }
 	        } catch (Exception e) {
 	        }
@@ -120,6 +127,25 @@ public class MojeDugme extends JButton implements ActionListener
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
         } 
+		
+		DefaultTableModel model=new DefaultTableModel();
+		model.addColumn("Broj korisnika"); model.addColumn("Ime i prezime korisnika"); model.addColumn("Korisničko ime"); 
+		model.addColumn("Lozinka"); model.addColumn("Vrsta naloga");
+		Object podaci[] = new Object[5];
+		for (int i=0;i<lista.size();i++) {
+			podaci[0]=i+1;
+			podaci[1]=lista.get(i).ime;
+			podaci[2]=lista.get(i).korisnickoIme;
+			podaci[3]=lista.get(i).lozinka;
+			podaci[4]=lista.get(i).premijum ? "premijum nalog":"osnovni nalog";
+			model.addRow(podaci);
+		}
+		JTable tabela=new JTable(model); tabela.setDefaultEditor(Object.class, null); 
+		JScrollPane skrol=new JScrollPane(tabela); tabela.setBackground(new Color(0,255,51));
+		JFrame okvir=new JFrame("PREGLED KORISNIKA");
+		okvir.setSize(800,400); okvir.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
+		okvir.setLocationRelativeTo(null); okvir.setLayout(new BorderLayout());
+		okvir.add(skrol,BorderLayout.CENTER); okvir.setVisible(true);
 	}
 	
 	private void obrisiZahtjev()
