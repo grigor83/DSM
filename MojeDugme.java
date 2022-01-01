@@ -17,6 +17,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
 public class MojeDugme extends JButton implements ActionListener
@@ -127,6 +128,10 @@ public class MojeDugme extends JButton implements ActionListener
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
         } 
+		if (lista.size()==0) {
+			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
+			return;
+		}
 		
 		DefaultTableModel model=new DefaultTableModel();
 		model.addColumn("Broj korisnika"); model.addColumn("Ime i prezime korisnika"); model.addColumn("Korisničko ime"); 
@@ -141,11 +146,28 @@ public class MojeDugme extends JButton implements ActionListener
 			model.addRow(podaci);
 		}
 		JTable tabela=new JTable(model); tabela.setDefaultEditor(Object.class, null); 
+		tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		
 		JScrollPane skrol=new JScrollPane(tabela); tabela.setBackground(new Color(0,255,51));
+		JButton delete=new JButton("Obriši nalog"); delete.setBackground(new Color(0,255,51));
+		delete.addActionListener(new ActionListener() 
+	      {
+	         @Override
+	         public void actionPerformed(ActionEvent ae) 
+	         {
+	            if(tabela.getSelectedRow() != -1) 
+	            {
+	            	String korisnickoIme=(String) tabela.getValueAt(tabela.getSelectedRow(), 2);
+	            	obrisiNalog(lista,korisnickoIme);
+	                model.removeRow(tabela.getSelectedRow());
+	                JOptionPane.showMessageDialog(null, "Nalog je uspješno obrisan!");
+	            }
+	         }
+	      });
 		JFrame okvir=new JFrame("PREGLED KORISNIKA");
 		okvir.setSize(800,400); okvir.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
 		okvir.setLocationRelativeTo(null); okvir.setLayout(new BorderLayout());
-		okvir.add(skrol,BorderLayout.CENTER); okvir.setVisible(true);
+		okvir.add(skrol,BorderLayout.CENTER); okvir.add(delete,BorderLayout.SOUTH); okvir.setVisible(true);
 	}
 	
 	private void obrisiZahtjev()
@@ -160,6 +182,29 @@ public class MojeDugme extends JButton implements ActionListener
 			fajl = new FileOutputStream(zahtjevi,true);
             izlaz = new ObjectOutputStream(fajl);
             for (Korisnik temp: lista)
+            	izlaz.writeObject(temp);
+            izlaz.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void obrisiNalog(LinkedList<Korisnik> l, String korisnickoIme)
+	{
+		for (Korisnik temp:l)
+			if(temp.korisnickoIme.equals(korisnickoIme)) {
+				l.remove(temp);
+				break;
+			}
+		//Sad snimam cijelu listu bez obrisanog naloga u fajl
+		FileOutputStream fajl=null;
+		ObjectOutputStream izlaz=null;
+		
+		try {
+			new FileOutputStream(korisnici).close();		//prvo brise sadrzaj cijelog fajla i odmah ga zatvara
+			fajl = new FileOutputStream(korisnici,true);
+            izlaz = new ObjectOutputStream(fajl);
+            for (Korisnik temp: l)
             	izlaz.writeObject(temp);
             izlaz.close();
 		} catch (IOException e) {

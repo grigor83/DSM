@@ -22,7 +22,7 @@ public class Administrator extends JFrame {
 	JTextField polje;
 	JPanel p;
 	JScrollPane skrol;
-	JButton pregled, brisanje;
+	JButton pregled;
 	LinkedList<JButton> lista;
 	
 	public Administrator()
@@ -42,11 +42,12 @@ public class Administrator extends JFrame {
 		skrol=new JScrollPane(p);
 		polje=new JTextField("Primili ste sljedeće zahtjeve za registraciju:"); polje.setHorizontalAlignment(JTextField. CENTER); 
 		polje.setBackground(new Color(0,255,51)); polje.setFont(new Font("Italic", Font.ITALIC+Font.BOLD, 30)); polje.setEditable(false);
-		pregled=new MojeDugme(p,null,"Pregled naloga");   brisanje=new MojeDugme(p,null,"Brisanje naloga");
+		pregled=new MojeDugme(p,null,"Pregled naloga");   pregled.setBackground(new Color(0,255,51)); 
+		pregled.setFont(new Font("Bold", Font.BOLD, 20)); 
 		setTitle("ADMINISTRATOR"); setSize(800,400); setDefaultCloseOperation(EXIT_ON_CLOSE); 
 		setLocationRelativeTo(null); setLayout(new BorderLayout()); 
 		add(polje,BorderLayout.NORTH); add(skrol,BorderLayout.CENTER); 
-		add(pregled,BorderLayout.WEST);  add(brisanje,BorderLayout.EAST); setVisible(true);
+		add(pregled,BorderLayout.SOUTH); setVisible(true);
 	}
 	
 	
@@ -58,7 +59,6 @@ public class Administrator extends JFrame {
 	{
 		String path;
 		File zahtjevi;
-		ObjectInputStream ois=null;
 		Korisnik k = null;
 		
 		try {
