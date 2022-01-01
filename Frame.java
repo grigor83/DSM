@@ -189,13 +189,13 @@ public class Frame extends JFrame{
 		}
 		
 		JOptionPane.showMessageDialog(null, "Uspješno ste se prijavili na sistem!"); 
-		lista.remove(k);
 		if (k.brojPrijava==n)
 			k=promijeniLozinku(k);
 		azurirajKorisnika(korisnici,lista,k);	
 		File korisnickiFolder=new File(path+"\\"+k.korisnickoIme);
 		if (!korisnickiFolder.exists())
 			korisnickiFolder.mkdirs();
+		new KorisnickiFrame(this,korisnickiFolder,k);
 	}
 	
 	private Korisnik promijeniLozinku(Korisnik k)
@@ -212,7 +212,7 @@ public class Frame extends JFrame{
 	
 	private void azurirajKorisnika(File korisnici, LinkedList<Korisnik> lista, Korisnik k)
 	{
-		k.brojPrijava++;   lista.add(k);
+		k.brojPrijava++; 
 		FileOutputStream fajl=null;
 		ObjectOutputStream izlaz=null;
 		
