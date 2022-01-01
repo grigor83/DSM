@@ -12,9 +12,8 @@ public class Korisnik implements Serializable {
 	}
 	
 	public String toString() {
-        return new StringBuffer("Ime: ").append(this.ime)
-                .append(" Korisnicko: ").append(this.korisnickoIme).append(" Lozinka: ").append(this.lozinka).
-                append(" vrsta: ").append(premijum).toString();
+        return new StringBuffer("IME: "+this.ime+"        ").append(" KORISNIČKO IME: "+this.korisnickoIme+"        ")
+        		.append(" LOZINKA: "+this.lozinka+"        ").toString();
     }
 	
 	@Override

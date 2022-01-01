@@ -38,6 +38,7 @@ public class MojeDugme extends JButton implements ActionListener
 			lista=new LinkedList<>();
 		if (k!=null)
 			lista.add(k);
+		setBackground(new Color(255,255,0)); 
 	}
 	
 	public void actionPerformed(ActionEvent e){
@@ -108,7 +109,7 @@ public class MojeDugme extends JButton implements ActionListener
 	private void ucitajKorisnike()
 	{
 		if (!korisnici.exists()) {
-			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
+			JOptionPane.showMessageDialog(null, "Nema registrovanih korisnika!"); 
 			return;
 		}
 		
@@ -126,10 +127,10 @@ public class MojeDugme extends JButton implements ActionListener
 	        fin.close();
 	        oIn.close();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
+			JOptionPane.showMessageDialog(null, "Nema registrovanih korisnika!"); 
         } 
 		if (lista.size()==0) {
-			JOptionPane.showMessageDialog(this, "Nema registrovanih korisnika!"); 
+			JOptionPane.showMessageDialog(null, "Nema registrovanih korisnika!"); 
 			return;
 		}
 		

@@ -33,8 +33,10 @@ public class Administrator extends JFrame {
 		cons.fill = GridBagConstraints.HORIZONTAL;
 		cons.weightx = 1;
 		cons.gridx = 0;	
-		if (!ucitajZahtjeve(p))
-			p.add(new JButton("Nema zahtjeva za registraciju!"));
+		if (!ucitajZahtjeve(p)) {
+			JButton b=new JButton("Nema zahtjeva za registraciju!"); b.setBackground(new Color(255,255,0));
+			b.setFont(new Font("Plain", Font.PLAIN, 20)); p.add(b);
+		}
 		else 
 			while(!lista.isEmpty()) {
 				p.add(lista.remove(),cons);
@@ -43,7 +45,7 @@ public class Administrator extends JFrame {
 		polje=new JTextField("Primili ste sljedeće zahtjeve za registraciju:"); polje.setHorizontalAlignment(JTextField. CENTER); 
 		polje.setBackground(new Color(0,255,51)); polje.setFont(new Font("Italic", Font.ITALIC+Font.BOLD, 30)); polje.setEditable(false);
 		pregled=new MojeDugme(p,null,"Pregled naloga");   pregled.setBackground(new Color(0,255,51)); 
-		pregled.setFont(new Font("Bold", Font.BOLD, 20)); 
+		pregled.setFont(new Font("Plain", Font.PLAIN, 20));
 		setTitle("ADMINISTRATOR"); setSize(800,400); setDefaultCloseOperation(EXIT_ON_CLOSE); 
 		setLocationRelativeTo(null); setLayout(new BorderLayout()); 
 		add(polje,BorderLayout.NORTH); add(skrol,BorderLayout.CENTER); 
