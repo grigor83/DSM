@@ -26,8 +26,6 @@ class  AppendableOOS extends ObjectOutputStream
     }  
 }
 
-
-
 public class Frame extends JFrame{
 	String path;
 	int n;
@@ -90,7 +88,7 @@ public class Frame extends JFrame{
 		FileOutputStream fajl=null;
 		ObjectOutputStream izlaz=null;
 		Boolean isNewFile=false;
-		
+
 		try {
 			if (!zahtjevi.exists()) {
 				zahtjevi.createNewFile();
@@ -192,10 +190,14 @@ public class Frame extends JFrame{
 		if (k.brojPrijava==n)
 			k=promijeniLozinku(k);
 		azurirajKorisnika(korisnici,lista,k);	
-		File korisnickiFolder=new File(path+"\\"+k.korisnickoIme);
-		if (!korisnickiFolder.exists())
-			korisnickiFolder.mkdirs();
-		new KorisnickiFrame(this,korisnickiFolder,k);
+		if (k.premijum)
+			new KorisnickiFrame(this,new File(path),k);
+		else {
+			File korisnickiFolder=new File(path+"\\"+k.korisnickoIme);
+			if (!korisnickiFolder.exists())
+				korisnickiFolder.mkdirs();
+			new KorisnickiFrame(this,korisnickiFolder,k);
+		}
 	}
 	
 	private Korisnik promijeniLozinku(Korisnik k)
