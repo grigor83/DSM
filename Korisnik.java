@@ -1,9 +1,13 @@
 import java.awt.BorderLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Color;
+import java.awt.Font;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -14,6 +18,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -28,6 +33,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import javax.swing.text.Utilities;
 
 public class Korisnik implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -36,10 +42,11 @@ public class Korisnik implements Serializable {
 	Boolean premijum;
 	File mojFolder;
 	JTextArea papir;
+	HashMap<Integer, String> fajlovi;
 	
 	public Korisnik(String s, String s1, String s2)
 	{
-		ime=s; korisnickoIme=s1; lozinka=s2; brojPrijava=0; premijum=false;
+		ime=s; korisnickoIme=s1; lozinka=s2; brojPrijava=0; premijum=false; 
 	}
 	
 	public String toString() {
@@ -104,6 +111,11 @@ public class Korisnik implements Serializable {
 	
 	public void izlistaj(JTextPane tekst, File[] files, File parent, int a)
 	{
+		String info;
+		if (premijum)
+			info="Pregled sadržaja glavnog foldera aplikacije";
+		else
+			info="Pregled sadržaja vašeg foldera";
 		StyledDocument dokument = tekst.getStyledDocument(); 
 		SimpleAttributeSet centrirano = new SimpleAttributeSet();
 		StyleConstants.setAlignment(centrirano, StyleConstants.ALIGN_CENTER);
@@ -116,7 +128,7 @@ public class Korisnik implements Serializable {
 		{
 			try {
 				dokument.setParagraphAttributes(dokument.getLength(), 1, centrirano, false);
-				dokument.insertString(dokument.getLength(),"Pregled sadržaja vašeg foldera\n" , centrirano);
+				dokument.insertString(dokument.getLength(),info+"\n" , centrirano);
 				StyleConstants.setBold(left, true); 
 				dokument.setParagraphAttributes(dokument.getLength(), 1, left, false);
 				dokument.insertString(dokument.getLength(),mojFolder.getAbsolutePath()+">\n" , left);
@@ -134,12 +146,16 @@ public class Korisnik implements Serializable {
 	            	for (int i=0;i<a;i++)
 	            		ime=ime+"      ";
 	                if (file.isDirectory()) {
-	                	ime=ime+"| - - " + file.getName(); 
-	        			dokument.insertString(dokument.getLength(),file.getAbsolutePath() + "\n", left);
+	                	ime=ime+"- - - " + file.getName(); 
+	                	fajlovi.put(dokument.getLength(), file.getAbsolutePath());
+	                	StyleConstants.setBold(left, true);
+	        			dokument.insertString(dokument.getLength(),ime + "\n", left);
+	        			StyleConstants.setBold(left, false);
 	                    izlistaj(tekst,file.listFiles(),file,a+1);
 	                } else {
 	                	ime=ime+"| - - " + file.getName(); 
-	        			dokument.insertString(dokument.getLength(),file.getAbsolutePath() + "\n", left);
+	                	fajlovi.put(dokument.getLength(), file.getAbsolutePath());
+	        			dokument.insertString(dokument.getLength(),ime + "\n", left);
 	                }
 	            }
 	        }
@@ -164,16 +180,9 @@ public class Korisnik implements Serializable {
 			if (!newFolder.exists()) {
 				newFolder.mkdirs();
 				JOptionPane.showMessageDialog(null, "Novi folder je kreiran!"); 
-				SimpleAttributeSet left = new SimpleAttributeSet();
-				StyleConstants.setAlignment(left, StyleConstants.ALIGN_LEFT);	
-				StyleConstants.setBold(left, false);  StyleConstants.setFontSize(left, 15);
-				try {
-					tekst.getStyledDocument().insertString(tekst.getStyledDocument().getLength(),newFolder.getAbsolutePath() + "\n", left);
-				} catch (BadLocationException e) {
-					e.printStackTrace();
-				}
-				tekst.revalidate();
-                tekst.repaint();
+				tekst.setText("");
+				izlistaj(tekst, mojFolder.listFiles(),mojFolder,0);		
+				tekst.revalidate(); tekst.repaint();	
 			}
 			else 
 				JOptionPane.showMessageDialog(null, "Folder sa tim nazivom već postoji!"); 
@@ -194,37 +203,33 @@ public class Korisnik implements Serializable {
 		File lokacija=prozorIzbora.getSelectedFile();
 		if (!lokacija.exists())
 			lokacija.mkdirs();
-		papir=new JTextArea(20,100); papir.setBackground(Color.lightGray); JScrollPane skrol = new JScrollPane(papir); 
-		JButton imenuj=new JButton("Imenuj fajl");  JButton sacuvaj=new JButton("Sačuvaj fajl");
-		imenuj.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				imeFajla=JOptionPane.showInputDialog(null, "Unesite ime fajla:");
-				if(imeFajla!=null) {
-					int indeks=imeFajla.indexOf(".");
-					if(indeks==-1)
-						imeFajla=lokacija.getAbsolutePath()+"\\"+ imeFajla+".txt";
-					else {
-						imeFajla=imeFajla.substring(0,indeks); 
-						imeFajla=lokacija.getAbsolutePath()+"\\"+imeFajla+".txt";
-					}
-				}	
-			}
-		});
-		JPanel p=new JPanel(); p.setLayout(new GridLayout(0,2)); p.add(imenuj); p.add(sacuvaj);
-		JFrame frame=new JFrame("Unesite tekst"); frame.add(skrol,BorderLayout.CENTER); frame.add(p,BorderLayout.SOUTH); 
-		frame.pack(); frame.setVisible(true); frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		papir=new JTextArea(20,80); papir.setBackground(Color.lightGray); JScrollPane skrol = new JScrollPane(papir); 
+		JButton sacuvaj=new JButton("Sačuvaj fajl"); sacuvaj.setFont(new Font("Plain", Font.PLAIN, 20)); sacuvaj.setBackground(new Color(0,255,51));
+		JFrame frame=new JFrame("Unesite tekst"); frame.add(skrol,BorderLayout.CENTER); frame.add(sacuvaj,BorderLayout.SOUTH); 
+		frame.pack(); frame.setLocationRelativeTo(null);  frame.setVisible(true); frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		sacuvaj.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(imeFajla==null)
-					return;
-				sacuvajFajl(frame,tekst);
+				sacuvajFajl(frame,lokacija,tekst);
 			}
 		});
 	}
 	
-	private void sacuvajFajl(JFrame frame, JTextPane pane)
+	private void sacuvajFajl(JFrame frame,File lokacija, JTextPane pane)
 	{
+		imeFajla=JOptionPane.showInputDialog(null, "Unesite ime fajla:");
+		if(imeFajla!=null) {
+			int indeks=imeFajla.indexOf(".");
+			if(indeks==-1)
+				imeFajla=lokacija.getAbsolutePath()+"\\"+ imeFajla+".txt";
+			else {
+				imeFajla=imeFajla.substring(0,indeks); 
+				imeFajla=lokacija.getAbsolutePath()+"\\"+imeFajla+".txt";
+			}
+		}	
+		if(imeFajla==null)
+			return;
+		
 		File noviFajl=new File(imeFajla);
 		if (noviFajl.exists()) {
 			JOptionPane.showMessageDialog(null, "Fajl sa tim nazivom već postoji!"); return;
@@ -255,5 +260,100 @@ public class Korisnik implements Serializable {
 		pane.setText("");
 		izlistaj(pane, mojFolder.listFiles(),mojFolder,0);		
 		pane.revalidate(); pane.repaint();
+	}
+	
+	public void kopirajFajl(JTextPane pane)
+	{
+		JFileChooser prozorIzbora = new JFileChooser(mojFolder);
+		prozorIzbora.setApproveButtonText("kopiraj");
+		prozorIzbora.setDialogTitle("Izaberite fajl koji želite da kopirate!");
+		int izbor=prozorIzbora.showOpenDialog(null);
+		if(izbor!=JFileChooser.APPROVE_OPTION)
+			return;		
+		File fajl=prozorIzbora.getSelectedFile();
+		System.out.println(fajl);
+		if (!fajl.exists())
+			return;
+		if (fajl.isDirectory()) {
+			JOptionPane.showMessageDialog(null, "Ne možete da kopirate folder!"); 
+			return;
+		}
+		File novi=new File(mojFolder.getAbsolutePath()+"\\"+fajl.getName());
+		if (novi.exists()) {
+			int n = JOptionPane.showConfirmDialog(null, "Ako nastavite, obrisaćete fajl!", null,JOptionPane.YES_NO_OPTION);	
+			if (n==JOptionPane.NO_OPTION || n==JOptionPane.CLOSED_OPTION)
+				return;
+		}
+
+		BufferedInputStream original;
+		BufferedOutputStream kopija;
+		try {
+			original=new BufferedInputStream(new FileInputStream(fajl));
+			kopija=new BufferedOutputStream(new FileOutputStream(novi));
+			int bajt;
+			while ((bajt=original.read())!=-1)
+				kopija.write(bajt);
+			kopija.flush();
+			JOptionPane.showMessageDialog(null, "Fajl je uspješno kopiran!"); 
+			original.close(); kopija.close();
+			pane.setText("");
+			izlistaj(pane, mojFolder.listFiles(),mojFolder,0);		
+			pane.revalidate(); pane.repaint();
+		}
+		catch (IOException e) {
+			JOptionPane.showMessageDialog(null, "Kopiranje fajla nije uspjelo!"); 
+		}
+	}
+
+	public void kopirajGlavniFolder(JTextPane pane) {
+		int n = JOptionPane.showConfirmDialog(null, "Da li želite da kopirate glavni folder aplikacije?", null,JOptionPane.YES_NO_OPTION);	
+		if (n==JOptionPane.NO_OPTION || n==JOptionPane.CLOSED_OPTION) {
+			kopirajFajl(pane); 			return;
+		}
+		
+		JFileChooser prozorIzbora = new JFileChooser(mojFolder);
+		prozorIzbora.setApproveButtonText("izaberi");
+		prozorIzbora.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		prozorIzbora.setDialogTitle("Izaberite lokaciju na koju želite da kopirate cjelokupan folder aplikacije!");
+		int izbor=prozorIzbora.showOpenDialog(null);
+		if(izbor!=JFileChooser.APPROVE_OPTION)
+			return;		
+		File lokacija=prozorIzbora.getSelectedFile();
+		if (lokacija.equals(mojFolder)) {
+			JOptionPane.showMessageDialog(null, "Izabrali ste svoj folder kao lokaciju za kopiranje! Prekidam kopiranje!"); return;
+		}
+		lokacija=new File(lokacija.getAbsolutePath()+"\\"+"DSM");
+		lokacija.mkdirs();		
+		if (kopirajSve(lokacija,mojFolder.listFiles()))
+			JOptionPane.showMessageDialog(null, "Kopiranje foldera i svih fajlova je uspjelo!");		
+	}
+	
+	private Boolean kopirajSve(File lokacija, File[] files)
+	{
+		for (File file : files) {
+            if (file.isDirectory()) {
+            	File folder=new File(lokacija.getAbsoluteFile()+"\\"+file.getName());
+            	folder.mkdir();
+            	kopirajSve(folder,file.listFiles());
+            } else {
+            	File fajl=new File(lokacija.getAbsoluteFile()+"\\"+file.getName());
+            	BufferedInputStream original;
+        		BufferedOutputStream kopija;
+        		try {
+        			original=new BufferedInputStream(new FileInputStream(file));
+        			kopija=new BufferedOutputStream(new FileOutputStream(fajl));
+        			int bajt;
+        			while ((bajt=original.read())!=-1)
+        				kopija.write(bajt);
+        			kopija.flush();
+        			original.close(); kopija.close();
+        		}
+        		catch (IOException e) {
+        			JOptionPane.showMessageDialog(null, "Kopiranje foldera i svih fajlova nije uspjelo!"); 
+        			return false;
+        		}        	
+            }
+        }
+		return true;
 	}
 }
