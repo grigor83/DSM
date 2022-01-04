@@ -10,6 +10,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.nio.file.Files;
@@ -19,24 +21,30 @@ import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.ListSelectionModel;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
-import javax.swing.text.Utilities;
 
 public class Korisnik implements Serializable {
 	private static final long serialVersionUID = 1L;
+	KorisnickiFrame kf;
 	String ime, korisnickoIme, lozinka, imeFajla;
 	int brojPrijava;
 	Boolean premijum;
@@ -83,9 +91,10 @@ public class Korisnik implements Serializable {
             	if (file.getAbsolutePath().equals(naziv)) {
             		if (!file.isDirectory() && !file.getName().contains(".txt"))
                     {
-                    	JOptionPane.showMessageDialog(null, "Ne možete obrisati ovaj tip fajla!"); return;
+                    	JOptionPane.showMessageDialog(null, "Ne možete obrisati ovaj tip fajla!"); 
+                    	kf.addStatistics(file,1); return;
                     }
-            		deleteDir(file);
+            		deleteDir(file); 
             		tekst.setText("");
             		izlistaj(tekst, mojFolder.listFiles(),mojFolder,0);		
             		tekst.revalidate();
@@ -101,12 +110,58 @@ public class Korisnik implements Serializable {
 	
 	private void deleteDir(File dir)
 	{
-		File[] files=dir.listFiles();
-		if (files!=null) {
-			for (File f : files) 
-				deleteDir(f);
+		LinkedList<Statistika> lista=new LinkedList<Statistika>();
+		Statistika s;	Boolean prazna=false;
+		//ucitavam listu
+		try {
+			if(!kf.statistika.exists()) {
+				prazna=true;
+			}
+			if(!prazna) {
+				FileInputStream fin = new FileInputStream(kf.statistika);
+	            ObjectInputStream oIn = new ObjectInputStream(fin);
+	            try {
+	                while (true) {
+	                	s = (Statistika) oIn.readObject();
+	                    lista.add(s);
+	                }
+	            } catch (Exception e) {
+	            }
+	            fin.close();
+	            oIn.close();
+			}
+			
+            //sad brisem fajlove
+            File[] files=dir.listFiles();
+    		if (files!=null) {
+    			for (File f : files) {
+    				deleteDir(f);
+    				for (Statistika temp: lista)
+    	            	if (temp.naziv.equals(f.getAbsolutePath())) {
+    	            		lista.remove(temp); break;
+    	            	}
+    			}
+    		}
+            dir.delete();
+            for (Statistika temp: lista)
+            	if (temp.naziv.equals(dir.getAbsolutePath())) {
+            		lista.remove(temp); break;
+            	}
+            if(!prazna)
+            {
+            	//sad treba snimiti listu statistike			
+                FileOutputStream fajl=null;
+        		ObjectOutputStream izlaz=null;
+        		new FileOutputStream(kf.statistika).close();		//prvo brise sadrzaj cijelog fajla i odmah ga zatvara
+    			fajl = new FileOutputStream(kf.statistika,true);
+                izlaz = new ObjectOutputStream(fajl);
+                for (Statistika temp: lista)
+                	izlaz.writeObject(temp);
+                izlaz.close();		
+            }		
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-        dir.delete();
 	}
 	
 	public void izlistaj(JTextPane tekst, File[] files, File parent, int a)
@@ -166,7 +221,7 @@ public class Korisnik implements Serializable {
 		}
 	}
 	
-	public void kreirajFolder(JTextPane tekst)
+	public File kreirajFolder(JTextPane tekst)
 	{
 		String naziv;
 		do
@@ -183,10 +238,16 @@ public class Korisnik implements Serializable {
 				tekst.setText("");
 				izlistaj(tekst, mojFolder.listFiles(),mojFolder,0);		
 				tekst.revalidate(); tekst.repaint();	
+				return newFolder;
 			}
-			else 
+			else {
 				JOptionPane.showMessageDialog(null, "Folder sa tim nazivom već postoji!"); 
+				kf.addStatistics(newFolder, 1);
+				return null;
+			}
 		}
+		else
+			return null;
 	}
 	
 	public void kreirajTXT(JTextPane tekst)
@@ -201,8 +262,8 @@ public class Korisnik implements Serializable {
 		if(izbor!=JFileChooser.APPROVE_OPTION)
 			return;		
 		File lokacija=prozorIzbora.getSelectedFile();
-		if (!lokacija.exists())
-			lokacija.mkdirs();
+		if (lokacija.exists())
+			kf.addStatistics(lokacija,1);
 		papir=new JTextArea(20,80); papir.setBackground(Color.lightGray); JScrollPane skrol = new JScrollPane(papir); 
 		JButton sacuvaj=new JButton("Sačuvaj fajl"); sacuvaj.setFont(new Font("Plain", Font.PLAIN, 20)); sacuvaj.setBackground(new Color(0,255,51));
 		JFrame frame=new JFrame("Unesite tekst"); frame.add(skrol,BorderLayout.CENTER); frame.add(sacuvaj,BorderLayout.SOUTH); 
@@ -210,12 +271,14 @@ public class Korisnik implements Serializable {
 		
 		sacuvaj.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				sacuvajFajl(frame,lokacija,tekst);
+				File novi=sacuvajFajl(frame,lokacija,tekst);
+				if(novi!=null)
+					kf.addStatistics(novi,0);
 			}
 		});
 	}
 	
-	private void sacuvajFajl(JFrame frame,File lokacija, JTextPane pane)
+	private File sacuvajFajl(JFrame frame,File lokacija, JTextPane pane)
 	{
 		imeFajla=JOptionPane.showInputDialog(null, "Unesite ime fajla:");
 		if(imeFajla!=null) {
@@ -228,11 +291,11 @@ public class Korisnik implements Serializable {
 			}
 		}	
 		if(imeFajla==null)
-			return;
+			return null;
 		
 		File noviFajl=new File(imeFajla);
 		if (noviFajl.exists()) {
-			JOptionPane.showMessageDialog(null, "Fajl sa tim nazivom već postoji!"); return;
+			JOptionPane.showMessageDialog(null, "Fajl sa tim nazivom već postoji!"); return noviFajl;
 		}
 		String tekst=papir.getText();
 		PrintWriter izlaz; // izlazni tok 
@@ -260,6 +323,7 @@ public class Korisnik implements Serializable {
 		pane.setText("");
 		izlistaj(pane, mojFolder.listFiles(),mojFolder,0);		
 		pane.revalidate(); pane.repaint();
+		return noviFajl;
 	}
 	
 	public void kopirajFajl(JTextPane pane)
@@ -271,7 +335,6 @@ public class Korisnik implements Serializable {
 		if(izbor!=JFileChooser.APPROVE_OPTION)
 			return;		
 		File fajl=prozorIzbora.getSelectedFile();
-		System.out.println(fajl);
 		if (!fajl.exists())
 			return;
 		if (fajl.isDirectory()) {
@@ -299,6 +362,7 @@ public class Korisnik implements Serializable {
 			pane.setText("");
 			izlistaj(pane, mojFolder.listFiles(),mojFolder,0);		
 			pane.revalidate(); pane.repaint();
+			kf.addStatistics(novi,0);
 		}
 		catch (IOException e) {
 			JOptionPane.showMessageDialog(null, "Kopiranje fajla nije uspjelo!"); 
@@ -320,7 +384,8 @@ public class Korisnik implements Serializable {
 			return;		
 		File lokacija=prozorIzbora.getSelectedFile();
 		if (lokacija.equals(mojFolder)) {
-			JOptionPane.showMessageDialog(null, "Izabrali ste svoj folder kao lokaciju za kopiranje! Prekidam kopiranje!"); return;
+			JOptionPane.showMessageDialog(null, "Izabrali ste svoj folder kao lokaciju za kopiranje! Prekidam kopiranje!"); 
+			kf.addStatistics(lokacija,1); return;
 		}
 		lokacija=new File(lokacija.getAbsolutePath()+"\\"+"DSM");
 		lokacija.mkdirs();		
@@ -334,6 +399,7 @@ public class Korisnik implements Serializable {
             if (file.isDirectory()) {
             	File folder=new File(lokacija.getAbsoluteFile()+"\\"+file.getName());
             	folder.mkdir();
+            	kf.addStatistics(folder,0);
             	kopirajSve(folder,file.listFiles());
             } else {
             	File fajl=new File(lokacija.getAbsoluteFile()+"\\"+file.getName());
@@ -347,6 +413,7 @@ public class Korisnik implements Serializable {
         				kopija.write(bajt);
         			kopija.flush();
         			original.close(); kopija.close();
+        			kf.addStatistics(fajl,0);
         		}
         		catch (IOException e) {
         			JOptionPane.showMessageDialog(null, "Kopiranje foldera i svih fajlova nije uspjelo!"); 
@@ -355,5 +422,55 @@ public class Korisnik implements Serializable {
             }
         }
 		return true;
+	}
+	
+	public void pregledStatistike()
+	{
+		if (!kf.statistika.exists()) {
+			JOptionPane.showMessageDialog(null, "Nema dostupne statistike!"); 
+			return;
+		}
+		Statistika s;
+		LinkedList<Statistika> lista=new LinkedList<Statistika>();
+		
+		try {
+			FileInputStream fin = new FileInputStream(kf.statistika);
+            ObjectInputStream oIn = new ObjectInputStream(fin);
+            try {
+                while (true) {
+                	s = (Statistika) oIn.readObject();
+                    lista.add(s);
+                }
+            } catch (Exception e) {
+            }
+            fin.close();
+            oIn.close();			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		DefaultTableModel model=new DefaultTableModel();
+		model.addColumn("Naziv fajla"); model.addColumn("Broj pristupa"); 
+		Object podaci[] = new Object[2];
+		for (int i=0;i<lista.size();i++) {
+			podaci[0]=lista.get(i).naziv;
+			podaci[1]=lista.get(i).brojPristupa;
+			model.addRow(podaci);
+		}
+		
+		JTable tabela=new JTable(model); tabela.setDefaultEditor(Object.class, null); 
+		tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		TableColumn column = tabela.getColumnModel().getColumn(1);
+        column.setMinWidth(80);
+        column.setMaxWidth(80);
+        column.setPreferredWidth(80);
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        column.setCellRenderer( centerRenderer );
+		JScrollPane skrol=new JScrollPane(tabela); tabela.setBackground(new Color(0,255,51));
+		JFrame okvir=new JFrame("PREGLED STATISTIKE");
+		okvir.setSize(800,400); okvir.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
+		okvir.setLocationRelativeTo(null); 
+		okvir.add(skrol,BorderLayout.CENTER); okvir.setVisible(true);
 	}
 }

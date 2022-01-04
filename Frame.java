@@ -191,12 +191,12 @@ public class Frame extends JFrame{
 			k=promijeniLozinku(k);
 		azurirajKorisnika(korisnici,lista,k);	
 		if (k.premijum)
-			new KorisnickiFrame(this,new File(path),k);
+			new KorisnickiFrame(this,path,new File(path),k);
 		else {
 			File korisnickiFolder=new File(path+"\\"+k.korisnickoIme);
 			if (!korisnickiFolder.exists())
 				korisnickiFolder.mkdirs();
-			new KorisnickiFrame(this,korisnickiFolder,k);
+			new KorisnickiFrame(this,path,korisnickiFolder,k);
 		}
 	}
 	
