@@ -23,12 +23,10 @@ public class DSM {
 		try {
 			ulaz = new Scanner(new FileReader ("configFile.txt"));			
 			path=ulaz.nextLine();
+			n=ulaz.nextInt();
 			File DSMfolder=new File(path);
 			if (!DSMfolder.exists())
 				DSMfolder.mkdir();
-			n=ulaz.nextInt();
-			File nFajl=new File(path+"\\n.txt");
-			nFajl.createNewFile();
 		}
 		catch (FileNotFoundException e) {
 			System.out.println("takva datoteka ne postoji");
@@ -36,16 +34,6 @@ public class DSM {
 			e.printStackTrace();
 		}
 		ulaz.close();
-		
-		PrintWriter izlaz; // izlazni tok 
-		try {
-			izlaz = new PrintWriter (new FileWriter (path+"\\n.txt"));
-			izlaz.println(n);
-			izlaz.close();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		} 		
 	}
 
 }
