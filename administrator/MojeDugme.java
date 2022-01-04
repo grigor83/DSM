@@ -192,9 +192,10 @@ public class MojeDugme extends JButton implements ActionListener
 	
 	private void obrisiNalog(LinkedList<Korisnik> l, String korisnickoIme)
 	{
+		Korisnik k=null;
 		for (Korisnik temp:l)
 			if(temp.korisnickoIme.equals(korisnickoIme)) {
-				l.remove(temp);
+				l.remove(temp); k=temp;
 				break;
 			}
 		//Sad snimam cijelu listu bez obrisanog naloga u fajl
@@ -209,6 +210,69 @@ public class MojeDugme extends JButton implements ActionListener
             	izlaz.writeObject(temp);
             izlaz.close();
 		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		File DSMfolder=new File(path);
+		if(!DSMfolder.exists())
+			return;
+		File korisnickiFolder=new File(path+"\\"+k.korisnickoIme);
+		deleteDir(korisnickiFolder);
+	}
+	
+	private void deleteDir(File dir)
+	{
+		File statistika=new File(path+"\\"+"statistika");
+		LinkedList<Statistika> lista=new LinkedList<Statistika>();
+		Statistika s;	Boolean prazna=false;
+		//ucitavam listu
+		try {
+			if(!statistika.exists()) {
+				prazna=true;
+			}
+			if(!prazna) {
+				FileInputStream fin = new FileInputStream(statistika);
+	            ObjectInputStream oIn = new ObjectInputStream(fin);
+	            try {
+	                while (true) {
+	                	s = (Statistika) oIn.readObject();
+	                    lista.add(s);
+	                }
+	            } catch (Exception e) {
+	            }
+	            fin.close();
+	            oIn.close();
+			}
+			
+            //sad brisem fajlove
+            File[] files=dir.listFiles();
+    		if (files!=null) {
+    			for (File f : files) {
+    				deleteDir(f);
+    				for (Statistika temp: lista)
+    	            	if (temp.naziv.equals(f.getAbsolutePath())) {
+    	            		lista.remove(temp); break;
+    	            	}
+    			}
+    		}
+            dir.delete();
+            for (Statistika temp: lista)
+            	if (temp.naziv.equals(dir.getAbsolutePath())) {
+            		lista.remove(temp); break;
+            	}
+            if(!prazna)
+            {
+            	//sad treba snimiti listu statistike			
+                FileOutputStream fajl=null;
+        		ObjectOutputStream izlaz=null;
+        		new FileOutputStream(statistika).close();		//prvo brise sadrzaj cijelog fajla i odmah ga zatvara
+    			fajl = new FileOutputStream(statistika,true);
+                izlaz = new ObjectOutputStream(fajl);
+                for (Statistika temp: lista)
+                	izlaz.writeObject(temp);
+                izlaz.close();		
+            }		
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

@@ -29,15 +29,11 @@ public class KorisnickiFrame extends JFrame {
 	JFrame parent; Korisnik k;
 	JTextPane tekst; JScrollPane skrol;
 	JPanel p; JButton newFolder, newTXT, kopiraj, odjavi, pregled;
-	String info; File statistika;
+	File statistika;
 	
 	public KorisnickiFrame(JFrame parent,String path, File mojFolder, Korisnik k)
 	{		
 		this.parent=parent; this.k=k; this.k.mojFolder=mojFolder;  k.fajlovi=new HashMap<>(); statistika=new File(path+"\\"+"statistika"); k.kf=this;
-		if (k.premijum)
-			info="Pregled sadržaja glavnog foldera aplikacije";
-		else
-			info="Pregled sadržaja vašeg foldera";
 		tekst=new JTextPane(); tekst.setBackground(new Color(0,255,51)); tekst.setEditable(false); 
 		tekst.addMouseListener(new MouseListener() {
 			@Override
@@ -51,7 +47,7 @@ public class KorisnickiFrame extends JFrame {
 	                    tekst.setSelectionStart(rowStart); tekst.setSelectionEnd(rowEnd);
 	                    String red=tekst.getText(rowStart, rowEnd-rowStart);
 	                    red= red.replace("|", "").replace("-", ""); red=red.strip();
-	                    if(red.equals(mojFolder.getAbsolutePath()+">") || red.equals("Vaš folder je prazan") || red.equals(info))
+	                    if(red.equals(mojFolder.getAbsolutePath()+">") || red.equals("Vaš folder je prazan") || red.equals("Pregled sadržaja vašeg foldera"))
 	                    	return;
 	                    int x = JOptionPane.showConfirmDialog(null, "Da li želite obrisati fajl/folder?","Brisanje fajla/foldera",2);
 	                    if (x==0) {

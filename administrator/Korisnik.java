@@ -166,11 +166,6 @@ public class Korisnik implements Serializable {
 	
 	public void izlistaj(JTextPane tekst, File[] files, File parent, int a)
 	{
-		String info;
-		if (premijum)
-			info="Pregled sadržaja glavnog foldera aplikacije";
-		else
-			info="Pregled sadržaja vašeg foldera";
 		StyledDocument dokument = tekst.getStyledDocument(); 
 		SimpleAttributeSet centrirano = new SimpleAttributeSet();
 		StyleConstants.setAlignment(centrirano, StyleConstants.ALIGN_CENTER);
@@ -183,7 +178,7 @@ public class Korisnik implements Serializable {
 		{
 			try {
 				dokument.setParagraphAttributes(dokument.getLength(), 1, centrirano, false);
-				dokument.insertString(dokument.getLength(),info+"\n" , centrirano);
+				dokument.insertString(dokument.getLength(),"Pregled sadržaja vašeg foldera\n", centrirano);
 				StyleConstants.setBold(left, true); 
 				dokument.setParagraphAttributes(dokument.getLength(), 1, left, false);
 				dokument.insertString(dokument.getLength(),mojFolder.getAbsolutePath()+">\n" , left);
@@ -370,7 +365,7 @@ public class Korisnik implements Serializable {
 	}
 
 	public void kopirajGlavniFolder(JTextPane pane) {
-		int n = JOptionPane.showConfirmDialog(null, "Da li želite da kopirate glavni folder aplikacije?", null,JOptionPane.YES_NO_OPTION);	
+		int n = JOptionPane.showConfirmDialog(null, "Da li želite da kopirate svoj folder?", null,JOptionPane.YES_NO_OPTION);	
 		if (n==JOptionPane.NO_OPTION || n==JOptionPane.CLOSED_OPTION) {
 			kopirajFajl(pane); 			return;
 		}
@@ -378,7 +373,7 @@ public class Korisnik implements Serializable {
 		JFileChooser prozorIzbora = new JFileChooser(mojFolder);
 		prozorIzbora.setApproveButtonText("izaberi");
 		prozorIzbora.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		prozorIzbora.setDialogTitle("Izaberite lokaciju na koju želite da kopirate cjelokupan folder aplikacije!");
+		prozorIzbora.setDialogTitle("Izaberite lokaciju na koju želite da kopirate cjelokupan folder!");
 		int izbor=prozorIzbora.showOpenDialog(null);
 		if(izbor!=JFileChooser.APPROVE_OPTION)
 			return;		
@@ -387,7 +382,7 @@ public class Korisnik implements Serializable {
 			JOptionPane.showMessageDialog(null, "Izabrali ste svoj folder kao lokaciju za kopiranje! Prekidam kopiranje!"); 
 			kf.addStatistics(lokacija,1); return;
 		}
-		lokacija=new File(lokacija.getAbsolutePath()+"\\"+"DSM");
+		lokacija=new File(lokacija.getAbsolutePath()+"\\"+mojFolder.getName());
 		lokacija.mkdirs();		
 		if (kopirajSve(lokacija,mojFolder.listFiles()))
 			JOptionPane.showMessageDialog(null, "Kopiranje foldera i svih fajlova je uspjelo!");		

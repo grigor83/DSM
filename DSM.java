@@ -1,9 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Scanner;
 
 public class DSM {
@@ -30,9 +27,7 @@ public class DSM {
 		}
 		catch (FileNotFoundException e) {
 			System.out.println("takva datoteka ne postoji");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		} 
 		ulaz.close();
 	}
 
