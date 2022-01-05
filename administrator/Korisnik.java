@@ -382,6 +382,12 @@ public class Korisnik implements Serializable {
 			JOptionPane.showMessageDialog(null, "Izabrali ste svoj folder kao lokaciju za kopiranje! Prekidam kopiranje!"); 
 			kf.addStatistics(lokacija,1); return;
 		}
+		for (File f:mojFolder.listFiles())
+			if(f.getAbsolutePath().equals(lokacija.getAbsolutePath())) {
+				JOptionPane.showMessageDialog(null, "Izabrali ste folder unutar svog foldera kao lokaciju za kopiranje! Prekidam kopiranje!"); 
+				kf.addStatistics(lokacija,1); return;
+			}
+		
 		lokacija=new File(lokacija.getAbsolutePath()+"\\"+mojFolder.getName());
 		lokacija.mkdirs();		
 		if (kopirajSve(lokacija,mojFolder.listFiles()))
