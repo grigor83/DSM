@@ -189,6 +189,8 @@ public class Frame extends JFrame{
 		JOptionPane.showMessageDialog(null, "Uspješno ste se prijavili na sistem!"); 
 		if (k.brojPrijava==n)
 			k=promijeniLozinku(k);
+		if(k==null)
+			return;
 		azurirajKorisnika(korisnici,lista,k);	
 		File korisnickiFolder=new File(path+"\\"+k.korisnickoIme);
 		if (!korisnickiFolder.exists())
@@ -202,7 +204,7 @@ public class Frame extends JFrame{
 		{
 			k.lozinka = JOptionPane.showInputDialog(null, "Promijenite lozinku:");
 			if (k.lozinka==null)
-				break;
+				return null;
 		} while (k.lozinka.length()==0);
 		k.brojPrijava=0;
 		return k;
